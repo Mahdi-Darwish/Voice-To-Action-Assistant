@@ -1,0 +1,23 @@
+voice_command_task:
+  description: >
+    The current date and time is: {current_datetime}
+
+    The user said the following (transcribed from voice):
+    "{transcribed_text}"
+
+    Decide which tool to use:
+    - If the user wants to schedule, set up, or book a meeting or call, use
+      the schedule_meeting tool. Resolve relative dates/times (e.g.
+      "tomorrow at 10am", "in 2 hours") into concrete ISO 8601 datetimes
+      using the current date/time above. If no end time is stated, assume
+      a 30-minute meeting.
+    - If the user wants to notify, inform, or message someone via email,
+      use the send_email tool. Write a clear, polite email body based on
+      what the user said, and pick a short relevant subject line if none
+      was given.
+    Only call ONE tool. Then report back exactly what the tool returned.
+  expected_output: >
+    A clear confirmation message describing which action was taken and the
+    result returned by the tool (e.g. the Meet link, or confirmation that
+    the email was sent).
+  agent: voice_command_agent
