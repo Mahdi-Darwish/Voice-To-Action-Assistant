@@ -1,68 +1,65 @@
-# 🎙️ Voice Assistant — CrewAI + Whisper
+# Voice Assistant
 
-A voice-driven AI assistant that understands natural-language commands and uses a CrewAI agent to either **schedule a Google Meet meeting** or **send an email**.
+A voice-driven assistant built with CrewAI that can understand a user's request and either schedule a Google Meet meeting or send an email.
 
-```text
-🎙️ Voice
-   ↓
-🧠 Whisper — Speech to Text
-   ↓
-🤖 CrewAI + Gemini
-   ↓
- ┌──────────────────┬─────────────────┐
- 📅 Schedule Meeting   📧 Send Email
-        ↓                    ↓
- Google Calendar         Gmail SMTP
- + Google Meet
-```
+The application supports both voice and text input. Voice commands are transcribed locally using OpenAI Whisper. If the transcription is inaccurate, the user can enter or edit the command manually before sending it to the agent.
 
-## ✨ Features
+## Features
 
-* 🎙️ Local speech-to-text with **OpenAI Whisper**
-* 🤖 AI agent using **CrewAI + Gemini**
-* 📅 Creates Google Calendar events with Google Meet links
-* ⏰ Adds meeting reminders and attendee invitations
-* 📧 Sends emails through Gmail SMTP
-* 🖥️ Streamlit interface for text, microphone, and audio-file input
-* 🔐 API keys and credentials stored in `.env`
+- Voice-to-text using OpenAI Whisper
+- Manual text input as a fallback for inaccurate transcriptions
+- CrewAI agent for understanding requests and selecting the appropriate tool
+- Gemini for agent reasoning
+- Google Calendar integration
+- Automatic Google Meet link generation
+- Meeting reminders and attendee invitations
+- Gmail SMTP integration for sending emails
+- Streamlit interface for voice, text, and audio-file inputs
 
-## 🛠️ Tech Stack
-
-| Component      | Technology          |
-| -------------- | ------------------- |
-| Speech-to-text | OpenAI Whisper      |
-| Agent          | CrewAI `0.114.0`    |
-| LLM            | Gemini              |
-| Calendar       | Google Calendar API |
-| Email          | Gmail SMTP          |
-| UI             | Streamlit           |
-
-## 📁 Project Structure
+## Project Structure
 
 ```text
 voice_assistant_project/
-├── app.py
-├── requirements.txt
-├── .env
+├── .vscode/
 ├── credentials/
 │   ├── credentials.json
 │   └── token.json
-└── my_crew/
-    └── src/my_crew/
-        ├── crew.py
-        ├── main.py
-        ├── speech_to_text.py
-        ├── config/
-        │   ├── agents.yaml
-        │   └── tasks.yaml
-        └── tools/
-            ├── calendar_tool.py
-            └── email_tool.py
+├── my_crew/
+│   ├── pyproject.toml
+│   └── src/
+│       └── my_crew/
+│           ├── crew.py
+│           ├── main.py
+│           ├── speech_to_text.py
+│           ├── config/
+│           │   ├── agents.yaml
+│           │   └── tasks.yaml
+│           └── tools/
+│               ├── calendar_tool.py
+│               └── email_tool.py
+├── .gitignore
+├── app.py
+├── README.md
+└── requirements.txt
 ```
 
-## 🚀 Setup
+`venv/` and `.env` are local files and should not be committed to the repository.
+
+## Technologies
+
+- Python
+- CrewAI
+- Gemini
+- OpenAI Whisper
+- Google Calendar API
+- Gmail SMTP
+- Streamlit
+
+## Setup
 
 ### 1. Install FFmpeg
+
+Whisper requires FFmpeg to process audio files.
 
 **macOS:**
 
@@ -76,25 +73,36 @@ brew install ffmpeg
 sudo apt install ffmpeg
 ```
 
-### 2. Clone and install
+### 2. Create a virtual environment
 
 ```bash
-git clone <your-repo-url>
-cd voice_assistant_project
-
 python -m venv venv
 source venv/bin/activate
+```
 
-cd my_crew
-pip install -e .
-cd ..
+On Windows:
 
+```bash
+venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure credentials
+Install the CrewAI project:
 
-Create a `.env` file:
+```bash
+cd my_crew
+pip install -e .
+cd ..
+```
+
+### 4. Configure environment variables
+
+Create a `.env` file in the project root:
 
 ```env
 GMAIL_ADDRESS=youraddress@gmail.com
@@ -102,15 +110,19 @@ GMAIL_APP_PASSWORD=your_app_password
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-For Google Calendar, create OAuth credentials in Google Cloud Console and place them at:
+### 5. Configure Google Calendar
+
+Create a Google Cloud project and enable the Google Calendar API.
+
+Create a Desktop OAuth client and place the downloaded credentials file at:
 
 ```text
 credentials/credentials.json
 ```
 
-The application will generate `token.json` after the first Google login.
+The application will generate `token.json` after the first Google authentication.
 
-## ▶️ Run
+## Running the Application
 
 Start the Streamlit interface:
 
@@ -118,31 +130,38 @@ Start the Streamlit interface:
 python -m streamlit run app.py
 ```
 
-Or run from an audio file:
+The interface supports:
 
-```bash
-cd my_crew/src/my_crew
-python main.py path/to/audio.wav
-```
+- Text input
+- Microphone input
+- Audio file upload
 
-## 💬 Example
+If Whisper produces an incorrect transcription, the command can be manually entered or corrected before running the agent.
 
-```text
-"Schedule a meeting with james@company.com tomorrow at 10am
-for 30 minutes about the roadmap."
-```
+## Example Commands
 
-→ Creates a Google Calendar event with a Google Meet link.
+### Schedule a meeting
 
 ```text
-"Send an email to james@company.com saying I'll be 2 hours late."
+Schedule a meeting with james@company.com tomorrow at 10am
+for 30 minutes about the project roadmap.
 ```
 
-→ Sends the email through Gmail SMTP.
+The agent selects the `schedule_meeting` tool, creates the Google Calendar event, generates a Google Meet link, and adds the attendees and reminders.
 
-## 🔒 Security
+### Send an email
 
-Never commit secrets to GitHub:
+```text
+Send an email to james@company.com saying I'll be two hours late.
+```
+
+The agent selects the `send_email` tool and sends the message through Gmail SMTP.
+
+## Security
+
+Do not commit credentials or secrets to GitHub.
+
+Add the following to `.gitignore`:
 
 ```gitignore
 .env
@@ -150,8 +169,11 @@ venv/
 credentials/token.json
 credentials/credentials.json
 __pycache__/
+*.pyc
 ```
 
-## 📄 License
+If a credential is accidentally committed, revoke or regenerate it immediately.
+
+## License
 
 MIT
