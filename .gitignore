@@ -120,3 +120,8 @@ dmypy.json
 #Pycharm IDE
 .ideacredentials/
 credentials/
+.env
+venv/
+credentials/token.json
+credentials/credentials.json
+__pycache__/
