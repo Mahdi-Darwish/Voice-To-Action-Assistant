@@ -19,6 +19,8 @@ voice_command_task:
       what the user said, and pick a short relevant subject line if none
       was given.
     Only call ONE tool. Then report back exactly what the tool returned.
+    Always express start_time and end_time as plain local time with no
+    timezone suffix or 'Z' — do not convert to UTC yourself.
   expected_output: >
     A clear confirmation message describing which action was taken and the
     result returned by the tool (e.g. the Meet link, or confirmation that

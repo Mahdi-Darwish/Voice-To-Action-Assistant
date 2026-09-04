@@ -3,6 +3,7 @@ import datetime
 from typing import List, Type
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
+from zoneinfo import ZoneInfo
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from pydantic import BaseModel, Field, field_validator
@@ -10,6 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 CREDENTIALS_PATH = os.path.join("credentials", "credentials.json")
+DEFAULT_TIMEZONE = "Asia/Beirut"
 TOKEN_PATH = os.path.join("credentials", "token.json")
 def get_calendar_service():
     """
@@ -49,10 +51,6 @@ class ScheduleMeetingInput(BaseModel):
     attendees: List[str] = Field(
         ..., description="List of attendee email addresses, e.g. ['a@x.com', 'b@x.com']"
     )
-    timezone: str = Field(
-        default="Asia/Beirut",
-        description="IANA timezone name, e.g. 'Asia/Beirut', 'UTC', 'America/New_York'",
-    )
     description: str = Field(
         default="", description="Optional longer description / agenda for the meeting"
     )
@@ -60,10 +58,12 @@ class ScheduleMeetingInput(BaseModel):
     @classmethod
     def valid_iso(cls, v):
         try:
-            datetime.datetime.fromisoformat(v)
+            parsed = datetime.datetime.fromisoformat(v)
         except ValueError:
             raise ValueError(f"'{v}' is not a valid ISO 8601 datetime")
-        return v
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=ZoneInfo(DEFAULT_TIMEZONE)).replace(tzinfo=None)
+        return parsed.isoformat()
     
 class ScheduleMeetingTool(BaseTool):
     name: str = "schedule_meeting"
@@ -82,17 +82,15 @@ class ScheduleMeetingTool(BaseTool):
         start_time: str,
         end_time: str,
         attendees: List[str],
-        timezone: str = "Asia/Beirut",
         description: str = "",
     ) -> str:
         try:
             service = get_calendar_service()
-
             event_body = {
                 "summary": summary,
                 "description": description,
-                "start": {"dateTime": start_time, "timeZone": timezone},
-                "end": {"dateTime": end_time, "timeZone": timezone},
+                "start": {"dateTime": start_time, "timeZone": DEFAULT_TIMEZONE},
+                "end": {"dateTime": end_time, "timeZone": DEFAULT_TIMEZONE  },
                 "attendees": [{"email": email} for email in attendees],
                 "conferenceData": {
                     "createRequest": {
@@ -120,7 +118,6 @@ class ScheduleMeetingTool(BaseTool):
                 )
                 .execute()
             )
-
             meet_link = event.get("hangoutLink", "No Meet link generated")
             event_link = event.get("htmlLink", "")
 
@@ -128,7 +125,7 @@ class ScheduleMeetingTool(BaseTool):
                 f"Meeting '{summary}' scheduled successfully.\n"
                 f"Google Meet link: {meet_link}\n"
                 f"Calendar event: {event_link}\n"
-                f"Start: {start_time} ({timezone}) | End: {end_time} ({timezone})\n"
+                f"Start: {start_time} ({DEFAULT_TIMEZONE}) | End: {end_time} ({DEFAULT_TIMEZONE})\n"
                 f"Attendees invited: {', '.join(attendees)}\n"
                 f"Reminders set for 24 hours and 1 hour before the meeting.\n"
                 f"Invitations with the Meet link were emailed to all attendees and the organizer."
