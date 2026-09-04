@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from pydantic import BaseModel, Field, field_validator
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
@@ -55,7 +56,15 @@ class ScheduleMeetingInput(BaseModel):
     description: str = Field(
         default="", description="Optional longer description / agenda for the meeting"
     )
-
+    @field_validator("start_time", "end_time")
+    @classmethod
+    def valid_iso(cls, v):
+        try:
+            datetime.datetime.fromisoformat(v)
+        except ValueError:
+            raise ValueError(f"'{v}' is not a valid ISO 8601 datetime")
+        return v
+    
 class ScheduleMeetingTool(BaseTool):
     name: str = "schedule_meeting"
     description: str = (

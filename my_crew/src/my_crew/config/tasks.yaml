@@ -1,16 +1,19 @@
 voice_command_task:
   description: >
     The current date and time is: {current_datetime}
-
     The user said the following (transcribed from voice):
     "{transcribed_text}"
-
     Decide which tool to use:
     - If the user wants to schedule, set up, or book a meeting or call, use
       the schedule_meeting tool. Resolve relative dates/times (e.g.
       "tomorrow at 10am", "in 2 hours") into concrete ISO 8601 datetimes
       using the current date/time above. If no end time is stated, assume
-      a 30-minute meeting.
+      a 30-minute meeting. When the user gives a time without am/pm
+      (e.g. "at 9"), assume the next upcoming occurrence during typical
+      daytime/business hours (9am, not 9pm) unless context clearly says
+      otherwise. Double-check that the hour and minute in start_time
+      exactly match what the user said before returning it — never
+      default to 00:00 unless the user explicitly said midnight.
     - If the user wants to notify, inform, or message someone via email,
       use the send_email tool. Write a clear, polite email body based on
       what the user said, and pick a short relevant subject line if none
